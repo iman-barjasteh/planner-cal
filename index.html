@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wanderlust · Travel Planner</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="logo"><span>✈️</span> Wanderlust</div>
+    <div class="tagline">Plan your trip day by day — itemize events, drag to reorder, never miss a moment.</div>
+  </header>
+
+  <div class="wrap">
+    <!-- World clocks -->
+    <section class="clocks">
+      <div class="clock">
+        <div class="clock-top">
+          <span class="clock-flag">🇺🇸</span>
+          <div class="tz-combo" id="combo1">
+            <input type="text" class="tz-input" id="tz1Input" placeholder="Search city or country…" autocomplete="off" />
+            <div class="tz-list" id="tz1List"></div>
+          </div>
+        </div>
+        <div class="clock-time" id="time1">--:--</div>
+        <div class="clock-date" id="date1"></div>
+      </div>
+      <div class="clock">
+        <div class="clock-top">
+          <span class="clock-flag">📍</span>
+          <div class="tz-combo" id="combo2">
+            <input type="text" class="tz-input" id="tz2Input" placeholder="Search city or country…" autocomplete="off" />
+            <div class="tz-list" id="tz2List"></div>
+          </div>
+          <button class="tz-auto" id="tzAuto" title="Use my current location's time zone">Auto</button>
+        </div>
+        <div class="clock-time" id="time2">--:--</div>
+        <div class="clock-date" id="date2"></div>
+      </div>
+    </section>
+
+    <!-- Control panel -->
+    <section class="panel">
+      <div class="field">
+        <label for="tripName">Trip name</label>
+        <input type="text" id="tripName" placeholder="e.g. Japan Adventure" />
+      </div>
+      <div class="field">
+        <label for="startDateDisplay">Start date</label>
+        <div class="date-trigger" id="startTrigger">
+          <span class="cal-ico">📅</span>
+          <input type="text" id="startDateDisplay" placeholder="Select date" readonly />
+          <input type="hidden" id="startDate" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="endDateDisplay">End date</label>
+        <div class="date-trigger" id="endTrigger">
+          <span class="cal-ico">📅</span>
+          <input type="text" id="endDateDisplay" placeholder="Select date" readonly />
+          <input type="hidden" id="endDate" />
+        </div>
+      </div>
+      <div class="field">
+        <button class="btn" id="buildBtn">Build my calendar →</button>
+      </div>
+    </section>
+
+    <!-- Date range picker popup -->
+    <div class="datepicker" id="datepicker">
+      <div class="dp-head">
+        <button class="dp-nav" id="dpPrev" title="Previous month">‹</button>
+        <div class="dp-month" id="dpMonth"></div>
+        <button class="dp-nav" id="dpNext" title="Next month">›</button>
+      </div>
+      <div class="dp-dows">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="dp-grid" id="dpGrid"></div>
+      <div class="dp-foot">
+        <span class="dp-hint" id="dpHint">Pick a start date</span>
+        <button class="dp-clear" id="dpClear">Clear</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <section class="stats hidden" id="statsSection">
+      <div class="stat"><div class="num" id="statDays">0</div><div class="lbl">Days</div></div>
+      <div class="stat"><div class="num" id="statEvents">0</div><div class="lbl">Planned events</div></div>
+      <div class="stat"><div class="num" id="statDone">0</div><div class="lbl">Completed</div></div>
+      <div class="stat">
+        <div class="num" id="statPct">0%</div><div class="lbl">Progress</div>
+        <div class="progress-shell"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar hidden" id="toolbar">
+      <input type="text" class="search" id="searchBox" placeholder="🔍 Search events…" />
+      <span class="spacer"></span>
+      <button class="btn ghost" id="exportBtn">⬇ Export JSON</button>
+      <button class="btn ghost" id="importBtn">⬆ Import</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden" />
+      <button class="btn ghost" id="printBtn">🖨 Print</button>
+      <button class="btn secondary" id="clearBtn">🗑 Clear all</button>
+    </div>
+
+    <!-- Things to do (unplanned backlog) -->
+    <section class="backlog hidden" id="backlogSection">
+      <div class="backlog-head">
+        <div class="backlog-title">
+          <span class="backlog-icon">💡</span>
+          <div>
+            <div class="bl-name">Things to do — not planned yet</div>
+            <div class="bl-sub">Jot down ideas here, then drag them into any day.</div>
+          </div>
+        </div>
+        <button class="add-btn" id="backlogAdd" title="Add idea">＋ Add</button>
+      </div>
+      <div class="events backlog-events" id="backlogEvents" data-key="backlog"></div>
+    </section>
+
+    <!-- Calendar -->
+    <section class="calendar" id="calendar"></section>
+
+    <!-- Placeholder -->
+    <div class="placeholder" id="placeholder">
+      <div class="big">🗺️</div>
+      <p>Pick your start and end dates above, then hit <b>Build my calendar</b> to start planning each day.</p>
+    </div>
+
+    <div class="footer-note">Your plan is saved automatically in this browser. 💾</div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Add event</h3>
+      <div class="sub" id="modalSub"></div>
+      <div class="field" id="timeField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Time (optional)</label>
+        <div class="time-trigger" id="timeTrigger">
+          <span class="cal-ico">🕒</span>
+          <input type="text" id="timeDisplay" placeholder="Select time" readonly />
+          <input type="hidden" id="evTime" />
+          <button type="button" class="time-clear" id="timeClear" title="Clear time">✕</button>
+        </div>
+        <div class="timepicker" id="timepicker">
+          <div class="tp-cols">
+            <div class="tp-col" id="tpHours"></div>
+            <div class="tp-col" id="tpMins"></div>
+            <div class="tp-col" id="tpAmpm"></div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">What's the plan?</label>
+        <textarea id="evText" rows="2" placeholder="e.g. Visit Fushimi Inari Shrine"></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Category</label>
+        <div class="cat-row" id="catRow"></div>
+      </div>
+      <div class="field" id="linkField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Link (optional)</label>
+        <input type="url" id="evLink" placeholder="https://… website, map, or booking" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancelBtn">Cancel</button>
+        <button class="btn ghost" id="saveAddBtn">Save &amp; add another</button>
+        <button class="btn" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
