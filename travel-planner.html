@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wanderlust · Travel Planner</title>
+<style>
+  :root {
+    --bg: #eaf2ff;
+    --bg-soft: #dfeaff;
+    --card: #ffffff;
+    --card-2: #f3f8ff;
+    --accent: #3b82f6;
+    --accent-2: #14b8d4;
+    --accent-3: #6aa8ff;
+    --text: #1e2a44;
+    --muted: #6b7a99;
+    --danger: #ef4444;
+    --shadow: 0 10px 30px rgba(40,75,140,.12);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #cfe2ff 0%, transparent 55%),
+      radial-gradient(1000px 500px at 110% 10%, #dbeafe 0%, transparent 50%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 28px 24px 8px;
+    text-align: center;
+  }
+  .logo {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .logo span { font-size: 26px; }
+  .tagline { color: var(--muted); margin-top: 4px; font-size: 14px; }
+
+  /* ---------- World clocks ---------- */
+  .clocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .clock {
+    background: linear-gradient(160deg, var(--card-2), var(--card));
+    border: 1px solid rgba(40,75,140,.08);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 14px 18px;
+  }
+  .clock-top { display: flex; align-items: center; gap: 8px; }
+  .clock-flag { font-size: 18px; }
+  .tz-combo { position: relative; flex: 1; }
+  .tz-input {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid rgba(40,75,140,.12);
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 13px;
+    outline: none;
+    cursor: text;
+  }
+  .tz-input:focus { border-color: var(--accent); }
+  .tz-input::placeholder { color: var(--muted); }
+  .tz-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid rgba(40,75,140,.16);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 40;
+    display: none;
+  }
+  .tz-list.open { display: block; }
+  .tz-item {
+    display: flex; flex-direction: column;
+    padding: 7px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(40,75,140,.06);
+  }
+  .tz-item:last-child { border-bottom: none; }
+  .tz-item:hover, .tz-item.active { background: rgba(59,130,246,.12); }
+  .tz-item.sel { background: rgba(59,130,246,.18); }
+  .tz-item span:first-child { font-size: 13px; font-weight: 600; }
+  .tz-item .tz-c { font-size: 11px; color: var(--muted); }
+  .tz-empty { padding: 10px; font-size: 12px; color: var(--muted); text-align: center; }
+  .tz-auto {
+    background: rgba(125,151,255,.18);
+    color: var(--accent);
+    border: 1px solid rgba(125,151,255,.5);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .tz-auto:hover { background: rgba(125,151,255,.3); }
+  .clock-time {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .clock-time .ampm { font-size: 15px; font-weight: 700; margin-left: 4px; }
+  .clock-date { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 16px 20px 60px; }
+
+  /* ---------- Control panel ---------- */
+  .panel {
+    background: linear-gradient(160deg, var(--card), var(--bg-soft));
+    border: 1px solid rgba(40,75,140,.06);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .field input {
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.1);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+  }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,139,255,.25); }
+  .btn {
+    border: none;
+    cursor: pointer;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: transform .12s, filter .2s;
+  }
+  .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(40,75,140,.18);
+  }
+  .btn.ghost { background: rgba(40,75,140,.06); color: var(--text); }
+
+  /* ---------- Date trigger + picker ---------- */
+  .date-trigger {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.1);
+    border-radius: 12px;
+    padding: 0 12px;
+    cursor: pointer;
+    transition: border .2s, box-shadow .2s;
+  }
+  .date-trigger:hover { border-color: rgba(40,75,140,.25); }
+  .date-trigger.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,139,255,.25); }
+  .date-trigger .cal-ico { font-size: 16px; }
+  .date-trigger input[type="text"] {
+    border: none; background: transparent; color: var(--text);
+    padding: 12px 0; font-size: 15px; outline: none; width: 100%; cursor: pointer;
+  }
+  .date-trigger input::placeholder { color: var(--muted); }
+
+  .datepicker {
+    position: absolute;
+    z-index: 70;
+    width: 300px;
+    background: linear-gradient(165deg, var(--card-2), var(--card));
+    border: 1px solid rgba(40,75,140,.12);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 14px;
+    display: none;
+  }
+  .datepicker.open { display: block; animation: dpIn .15s ease; }
+  @keyframes dpIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .dp-month { font-weight: 700; font-size: 15px; }
+  .dp-nav {
+    background: rgba(40,75,140,.06); border: none; color: var(--text);
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 18px; line-height: 1;
+  }
+  .dp-nav:hover { background: rgba(40,75,140,.16); }
+  .dp-dows { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px; }
+  .dp-dows span { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
+  .dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .dp-cell {
+    aspect-ratio: 1; border: none; background: transparent; color: var(--text);
+    border-radius: 8px; cursor: pointer; font-size: 13px;
+    display: grid; place-items: center; position: relative;
+  }
+  .dp-cell:hover:not(.muted) { background: rgba(40,75,140,.1); }
+  .dp-cell.muted { color: rgba(40,75,140,.18); cursor: default; }
+  .dp-cell.today { outline: 1px solid var(--accent-2); }
+  .dp-cell.in-range { background: rgba(108,139,255,.18); border-radius: 0; }
+  .dp-cell.range-start { background: var(--accent); color: #ffffff; font-weight: 800; border-radius: 8px 0 0 8px; }
+  .dp-cell.range-end { background: var(--accent); color: #ffffff; font-weight: 800; border-radius: 0 8px 8px 0; }
+  .dp-cell.single { border-radius: 8px; }
+  .dp-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(40,75,140,.08); }
+  .dp-hint { font-size: 12px; color: var(--muted); }
+  .dp-clear { background: transparent; border: none; color: var(--accent-3); cursor: pointer; font-size: 12px; font-weight: 600; }
+  .dp-clear:hover { text-decoration: underline; }
+
+  /* ---------- Time picker ---------- */
+  .time-trigger {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.12);
+    border-radius: 10px;
+    padding: 0 12px;
+    cursor: pointer;
+    transition: border .2s;
+  }
+  .time-trigger:hover { border-color: rgba(40,75,140,.28); }
+  .time-trigger.active { border-color: var(--accent); }
+  .time-trigger input[type="text"] {
+    border: none; background: transparent; color: var(--text);
+    padding: 11px 0; font-size: 15px; outline: none; width: 100%; cursor: pointer;
+  }
+  .time-trigger input::placeholder { color: var(--muted); }
+  .time-clear {
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 6px;
+  }
+  .time-clear:hover { background: rgba(40,75,140,.1); color: var(--text); }
+
+  .timepicker {
+    margin-top: 8px;
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.12);
+    border-radius: 12px;
+    padding: 8px;
+    display: none;
+  }
+  .timepicker.open { display: block; animation: dpIn .15s ease; }
+  .tp-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .tp-col {
+    max-height: 160px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 3px;
+    scrollbar-width: thin;
+  }
+  .tp-col::-webkit-scrollbar { width: 6px; }
+  .tp-col::-webkit-scrollbar-thumb { background: rgba(40,75,140,.15); border-radius: 6px; }
+  .tp-opt {
+    border: none; background: transparent; color: var(--text);
+    padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 14px; text-align: center;
+  }
+  .tp-opt:hover { background: rgba(40,75,140,.1); }
+  .tp-opt.sel { background: var(--accent); color: #ffffff; font-weight: 800; }
+
+  /* ---------- Trip summary / stats ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin: 22px 0 6px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid rgba(40,75,140,.06);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat .num { font-size: 26px; font-weight: 800; color: var(--accent-2); }
+  .stat .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .progress-shell { height: 8px; background: rgba(40,75,140,.08); border-radius: 8px; overflow: hidden; margin-top: 10px; }
+  .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-3), var(--accent)); transition: width .4s; }
+
+  .toolbar { display:flex; flex-wrap: wrap; gap:10px; align-items:center; margin: 18px 0 6px; }
+  .toolbar .spacer { flex: 1; }
+  .search {
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.1);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 12px;
+    min-width: 200px;
+  }
+
+  /* ---------- Calendar grid ---------- */
+  .calendar {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+
+  /* ---------- Backlog / ideas ---------- */
+  .backlog {
+    margin-top: 20px;
+    background: linear-gradient(165deg, #fffaf0, var(--card));
+    border: 1px solid rgba(244,162,97,.35);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .backlog.dragover { outline: 2px dashed var(--accent-3); outline-offset: -6px; }
+  .backlog-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(244,162,97,.10);
+    border-bottom: 1px solid rgba(244,162,97,.25);
+  }
+  .backlog-title { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .backlog-icon { font-size: 26px; }
+  .bl-name { font-weight: 800; font-size: 16px; }
+  .bl-sub { font-size: 12px; color: var(--muted); }
+  .backlog-events {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px;
+    padding: 14px 16px;
+    min-height: 70px;
+  }
+  .backlog-events .empty { grid-column: 1 / -1; }
+
+  .day-card {
+    background: linear-gradient(165deg, var(--card-2), var(--card));
+    border: 1px solid rgba(40,75,140,.07);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 230px;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .2s;
+  }
+  .day-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(40,75,140,.20); }
+  .day-card.dragover { outline: 2px dashed var(--accent-2); outline-offset: -6px; }
+  .day-head {
+    padding: 14px 16px;
+    background: rgba(40,75,140,.04);
+    border-bottom: 1px solid rgba(40,75,140,.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .day-badge {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    flex-shrink: 0;
+    line-height: 1;
+    font-size: 18px;
+  }
+  .day-title { display:flex; flex-direction: column; margin-right: auto; }
+  .day-title .dow { font-weight: 700; font-size: 16px; }
+  .day-title .date { font-size: 12px; color: var(--muted); }
+  .day-note {
+    font-size: 11px; color: var(--muted);
+  }
+
+  .events { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .empty { color: var(--muted); font-size: 13px; font-style: italic; text-align: center; padding: 14px 0; }
+
+  .event {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.08);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 9px 10px;
+    cursor: grab;
+  }
+  .event.done { opacity: .55; }
+  .event.done .ev-text { text-decoration: line-through; }
+  .event .cat-emoji { font-size: 26px; line-height: 1; margin-top: 2px; flex-shrink: 0; }
+  .event .ev-body { flex: 1; min-width: 0; }
+  .event .ev-time { font-size: 11px; color: var(--accent-2); font-weight: 700; }
+  .event .ev-text { font-size: 14px; word-wrap: break-word; }
+  .event .ev-cat { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .event .ev-link { color: var(--accent); text-decoration: none; text-transform: none; letter-spacing: 0; font-weight: 700; }
+  .event .ev-link:hover { text-decoration: underline; }
+  .event .ev-actions { display:flex; gap:4px; }
+  .icon-btn {
+    background: transparent; border: none; cursor: pointer; color: var(--muted);
+    font-size: 14px; padding: 2px 5px; border-radius: 6px;
+  }
+  .icon-btn:hover { background: rgba(40,75,140,.08); color: var(--text); }
+
+  .day-foot { padding: 8px 14px; border-top: 1px solid rgba(40,75,140,.06); display: flex; justify-content: flex-end; }
+  .add-btn {
+    background: rgba(108,139,255,.12);
+    color: var(--accent);
+    border: 1px solid rgba(108,139,255,.4);
+    border-radius: 9px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  .add-btn:hover { background: rgba(108,139,255,.24); }
+
+  /* ---------- Empty state ---------- */
+  .placeholder {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+  }
+  .placeholder .big { font-size: 56px; }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(30,58,110,.30);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: linear-gradient(165deg, var(--card-2), var(--card));
+    border: 1px solid rgba(40,75,140,.1);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: min(440px, 92vw);
+    padding: 22px;
+  }
+  .modal h3 { margin: 0 0 4px; }
+  .modal .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .modal .field { margin-bottom: 14px; }
+  .modal input, .modal select, .modal textarea {
+    background: var(--bg);
+    border: 1px solid rgba(40,75,140,.12);
+    color: var(--text);
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+  }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--accent); }
+  .cat-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cat-chip {
+    border: 1px solid rgba(40,75,140,.15);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 20px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cat-chip .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .cat-chip.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,139,255,.3); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120%);
+    background: var(--card-2); border: 1px solid rgba(40,75,140,.12);
+    padding: 12px 18px; border-radius: 12px; box-shadow: var(--shadow);
+    transition: transform .3s; z-index: 60; font-size: 14px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .hidden { display: none !important; }
+  .footer-note { text-align:center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+  a { color: var(--accent-2); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo"><span>✈️</span> Wanderlust</div>
+    <div class="tagline">Plan your trip day by day — itemize events, drag to reorder, never miss a moment.</div>
+  </header>
+
+  <div class="wrap">
+    <!-- World clocks -->
+    <section class="clocks">
+      <div class="clock">
+        <div class="clock-top">
+          <span class="clock-flag">🇺🇸</span>
+          <div class="tz-combo" id="combo1">
+            <input type="text" class="tz-input" id="tz1Input" placeholder="Search city or country…" autocomplete="off" />
+            <div class="tz-list" id="tz1List"></div>
+          </div>
+        </div>
+        <div class="clock-time" id="time1">--:--</div>
+        <div class="clock-date" id="date1"></div>
+      </div>
+      <div class="clock">
+        <div class="clock-top">
+          <span class="clock-flag">📍</span>
+          <div class="tz-combo" id="combo2">
+            <input type="text" class="tz-input" id="tz2Input" placeholder="Search city or country…" autocomplete="off" />
+            <div class="tz-list" id="tz2List"></div>
+          </div>
+          <button class="tz-auto" id="tzAuto" title="Use my current location's time zone">Auto</button>
+        </div>
+        <div class="clock-time" id="time2">--:--</div>
+        <div class="clock-date" id="date2"></div>
+      </div>
+    </section>
+
+    <!-- Control panel -->
+    <section class="panel">
+      <div class="field">
+        <label for="tripName">Trip name</label>
+        <input type="text" id="tripName" placeholder="e.g. Japan Adventure" />
+      </div>
+      <div class="field">
+        <label for="startDateDisplay">Start date</label>
+        <div class="date-trigger" id="startTrigger">
+          <span class="cal-ico">📅</span>
+          <input type="text" id="startDateDisplay" placeholder="Select date" readonly />
+          <input type="hidden" id="startDate" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="endDateDisplay">End date</label>
+        <div class="date-trigger" id="endTrigger">
+          <span class="cal-ico">📅</span>
+          <input type="text" id="endDateDisplay" placeholder="Select date" readonly />
+          <input type="hidden" id="endDate" />
+        </div>
+      </div>
+      <div class="field">
+        <button class="btn" id="buildBtn">Build my calendar →</button>
+      </div>
+    </section>
+
+    <!-- Date range picker popup -->
+    <div class="datepicker" id="datepicker">
+      <div class="dp-head">
+        <button class="dp-nav" id="dpPrev" title="Previous month">‹</button>
+        <div class="dp-month" id="dpMonth"></div>
+        <button class="dp-nav" id="dpNext" title="Next month">›</button>
+      </div>
+      <div class="dp-dows">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="dp-grid" id="dpGrid"></div>
+      <div class="dp-foot">
+        <span class="dp-hint" id="dpHint">Pick a start date</span>
+        <button class="dp-clear" id="dpClear">Clear</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <section class="stats hidden" id="statsSection">
+      <div class="stat"><div class="num" id="statDays">0</div><div class="lbl">Days</div></div>
+      <div class="stat"><div class="num" id="statEvents">0</div><div class="lbl">Planned events</div></div>
+      <div class="stat"><div class="num" id="statDone">0</div><div class="lbl">Completed</div></div>
+      <div class="stat">
+        <div class="num" id="statPct">0%</div><div class="lbl">Progress</div>
+        <div class="progress-shell"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar hidden" id="toolbar">
+      <input type="text" class="search" id="searchBox" placeholder="🔍 Search events…" />
+      <span class="spacer"></span>
+      <button class="btn ghost" id="exportBtn">⬇ Export JSON</button>
+      <button class="btn ghost" id="importBtn">⬆ Import</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden" />
+      <button class="btn ghost" id="printBtn">🖨 Print</button>
+      <button class="btn secondary" id="clearBtn">🗑 Clear all</button>
+    </div>
+
+    <!-- Things to do (unplanned backlog) -->
+    <section class="backlog hidden" id="backlogSection">
+      <div class="backlog-head">
+        <div class="backlog-title">
+          <span class="backlog-icon">💡</span>
+          <div>
+            <div class="bl-name">Things to do — not planned yet</div>
+            <div class="bl-sub">Jot down ideas here, then drag them into any day.</div>
+          </div>
+        </div>
+        <button class="add-btn" id="backlogAdd" title="Add idea">＋ Add</button>
+      </div>
+      <div class="events backlog-events" id="backlogEvents" data-key="backlog"></div>
+    </section>
+
+    <!-- Calendar -->
+    <section class="calendar" id="calendar"></section>
+
+    <!-- Placeholder -->
+    <div class="placeholder" id="placeholder">
+      <div class="big">🗺️</div>
+      <p>Pick your start and end dates above, then hit <b>Build my calendar</b> to start planning each day.</p>
+    </div>
+
+    <div class="footer-note">Your plan is saved automatically in this browser. 💾</div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Add event</h3>
+      <div class="sub" id="modalSub"></div>
+      <div class="field" id="timeField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Time (optional)</label>
+        <div class="time-trigger" id="timeTrigger">
+          <span class="cal-ico">🕒</span>
+          <input type="text" id="timeDisplay" placeholder="Select time" readonly />
+          <input type="hidden" id="evTime" />
+          <button type="button" class="time-clear" id="timeClear" title="Clear time">✕</button>
+        </div>
+        <div class="timepicker" id="timepicker">
+          <div class="tp-cols">
+            <div class="tp-col" id="tpHours"></div>
+            <div class="tp-col" id="tpMins"></div>
+            <div class="tp-col" id="tpAmpm"></div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">What's the plan?</label>
+        <textarea id="evText" rows="2" placeholder="e.g. Visit Fushimi Inari Shrine"></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Category</label>
+        <div class="cat-row" id="catRow"></div>
+      </div>
+      <div class="field" id="linkField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Link (optional)</label>
+        <input type="url" id="evLink" placeholder="https://… website, map, or booking" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancelBtn">Cancel</button>
+        <button class="btn ghost" id="saveAddBtn">Save &amp; add another</button>
+        <button class="btn" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const CATEGORIES = [
+    { id: "sightseeing", label: "Sightseeing", color: "#6c8bff", icon: "📸" },
+    { id: "food",        label: "Food",        color: "#ff7eb6", icon: "🍜" },
+    { id: "transport",   label: "Transport",   color: "#38d6c4", icon: "🚆" },
+    { id: "departure",   label: "Flight Departure", color: "#5e9bf0", icon: "🛫" },
+    { id: "flight",      label: "Flight Landing",   color: "#4cc9f0", icon: "🛬" },
+    { id: "checkin",     label: "Check-in",    color: "#43d49a", icon: "🛎️" },
+    { id: "checkout",    label: "Check-out",   color: "#f4a261", icon: "🧳" },
+    { id: "lodging",     label: "Lodging",      color: "#ffb86c", icon: "🏨" },
+    { id: "activity",    label: "Activity",    color: "#a16bff", icon: "🎟️" },
+    { id: "other",       label: "Other",       color: "#9aa0c7", icon: "📌" },
+  ];
+  const DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const STORE_KEY = "wanderlust_trip_v1";
+
+  let state = { tripName: "", start: "", end: "", days: {} }; // days: { "YYYY-MM-DD": [ {id,time,text,cat,done} ] }
+  let editing = { dayKey: null, eventId: null, cat: "sightseeing" };
+
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const catOf = (id) => CATEGORIES.find(c => c.id === id) || CATEGORIES.find(c => c.id === "other");
+
+  function parseDate(str) { const [y,m,d] = str.split("-").map(Number); return new Date(y, m-1, d); }
+  function keyOf(date) {
+    const y = date.getFullYear(), m = String(date.getMonth()+1).padStart(2,"0"), d = String(date.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+  function eachDay(startStr, endStr) {
+    const out = []; let cur = parseDate(startStr); const end = parseDate(endStr);
+    while (cur <= end) { out.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+    return out;
+  }
+
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  function load() {
+    try { const raw = localStorage.getItem(STORE_KEY); if (raw) state = JSON.parse(raw); } catch (e) {}
+  }
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    const cal = $("calendar");
+    const hasTrip = state.start && state.end;
+    $("placeholder").classList.toggle("hidden", hasTrip);
+    $("statsSection").classList.toggle("hidden", !hasTrip);
+    $("toolbar").classList.toggle("hidden", !hasTrip);
+    $("backlogSection").classList.toggle("hidden", !hasTrip);
+    cal.innerHTML = "";
+    if (!hasTrip) return;
+    renderBacklog();
+
+    const days = eachDay(state.start, state.end);
+    const filter = ($("searchBox").value || "").trim().toLowerCase();
+    let totalEvents = 0, doneEvents = 0;
+
+    days.forEach((date, idx) => {
+      const dk = keyOf(date);
+      const events = (state.days[dk] || []).slice().sort(sortEvents);
+      totalEvents += events.length;
+      doneEvents += events.filter(e => e.done).length;
+
+      const card = document.createElement("div");
+      card.className = "day-card";
+      card.dataset.key = dk;
+
+      const visible = filter
+        ? events.filter(e => e.text.toLowerCase().includes(filter) || catOf(e.cat).label.toLowerCase().includes(filter))
+        : events;
+
+      card.innerHTML = `
+        <div class="day-head">
+          <div class="day-badge">${idx+1}</div>
+          <div class="day-title">
+            <div class="dow">${DOW[date.getDay()]}</div>
+            <div class="date">${MON[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}</div>
+          </div>
+          <button class="add-btn" data-key="${dk}" title="Add event">＋ Add</button>
+        </div>
+        <div class="events" data-key="${dk}"></div>
+        <div class="day-foot"><span class="day-note">${events.length} item${events.length===1?"":"s"}</span></div>
+      `;
+
+      const evWrap = card.querySelector(".events");
+      if (visible.length === 0) {
+        evWrap.innerHTML = `<div class="empty">${filter ? "No matching events" : "Nothing planned yet — add your first event!"}</div>`;
+      } else {
+        visible.forEach(ev => evWrap.appendChild(renderEvent(dk, ev)));
+      }
+
+      // drag & drop targets
+      card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("dragover"); });
+      card.addEventListener("dragleave", () => card.classList.remove("dragover"));
+      card.addEventListener("drop", (e) => {
+        e.preventDefault(); card.classList.remove("dragover");
+        const data = e.dataTransfer.getData("text/plain");
+        if (data) moveEvent(data, dk);
+      });
+
+      cal.appendChild(card);
+    });
+
+    // stats
+    $("statDays").textContent = days.length;
+    $("statEvents").textContent = totalEvents;
+    $("statDone").textContent = doneEvents;
+    const pct = totalEvents ? Math.round(doneEvents/totalEvents*100) : 0;
+    $("statPct").textContent = pct + "%";
+    $("progressFill").style.width = pct + "%";
+  }
+
+  function renderBacklog() {
+    const wrap = $("backlogEvents");
+    const filter = ($("searchBox").value || "").trim().toLowerCase();
+    const items = (state.days.backlog || []).slice().sort(sortEvents);
+    const visible = filter
+      ? items.filter(e => e.text.toLowerCase().includes(filter) || catOf(e.cat).label.toLowerCase().includes(filter))
+      : items;
+    wrap.innerHTML = "";
+    if (visible.length === 0) {
+      wrap.innerHTML = `<div class="empty">${filter ? "No matching ideas" : "No ideas yet — add things you want to do but haven't scheduled."}</div>`;
+    } else {
+      visible.forEach(ev => wrap.appendChild(renderEvent("backlog", ev)));
+    }
+  }
+
+  function sortEvents(a, b) {
+    if (a.time && b.time) return a.time.localeCompare(b.time);
+    if (a.time) return -1;
+    if (b.time) return 1;
+    return 0;
+  }
+
+  function renderEvent(dk, ev) {
+    const c = catOf(ev.cat);
+    const el = document.createElement("div");
+    el.className = "event" + (ev.done ? " done" : "");
+    el.style.borderLeftColor = c.color;
+    el.draggable = true;
+    el.dataset.id = ev.id;
+    el.dataset.key = dk;
+    el.innerHTML = `
+      <span class="cat-emoji">${c.icon}</span>
+      <div class="ev-body">
+        ${ev.time ? `<div class="ev-time">${formatTime(ev.time)}</div>` : ""}
+        <div class="ev-text">${escapeHtml(ev.text)}</div>
+        <div class="ev-cat">${c.label}${ev.link ? ` · <a class="ev-link" href="${escapeHtml(ev.link)}" target="_blank" rel="noopener" title="${escapeHtml(ev.link)}">🔗 link</a>` : ""}</div>
+      </div>
+      <div class="ev-actions">
+        <button class="icon-btn" data-act="toggle" title="Mark done">✓</button>
+        <button class="icon-btn" data-act="edit" title="Edit">✏️</button>
+        <button class="icon-btn" data-act="del" title="Delete">🗑</button>
+      </div>`;
+
+    el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ dk, id: ev.id })));
+    el.querySelector(".ev-link")?.addEventListener("click", (e) => e.stopPropagation());
+    el.querySelectorAll(".icon-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const act = btn.dataset.act;
+        if (act === "toggle") toggleDone(dk, ev.id);
+        else if (act === "edit") openModal(dk, ev.id);
+        else if (act === "del") deleteEvent(dk, ev.id);
+      });
+    });
+    return el;
+  }
+
+  function formatTime(t) {
+    const [h, m] = t.split(":").map(Number);
+    const ap = h >= 12 ? "PM" : "AM";
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return `${hr}:${String(m).padStart(2,"0")} ${ap}`;
+  }
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  // ---------- mutations ----------
+  function moveEvent(json, targetKey) {
+    let src; try { src = JSON.parse(json); } catch { return; }
+    if (src.dk === targetKey) return;
+    const list = state.days[src.dk] || [];
+    const i = list.findIndex(e => e.id === src.id);
+    if (i < 0) return;
+    const [ev] = list.splice(i, 1);
+    (state.days[targetKey] = state.days[targetKey] || []).push(ev);
+    save(); render(); toast(targetKey === "backlog" ? "Moved to ideas" : "Event moved");
+  }
+  function toggleDone(dk, id) {
+    const ev = (state.days[dk] || []).find(e => e.id === id);
+    if (ev) { ev.done = !ev.done; save(); render(); }
+  }
+  function deleteEvent(dk, id) {
+    state.days[dk] = (state.days[dk] || []).filter(e => e.id !== id);
+    save(); render(); toast("Event deleted");
+  }
+
+  // ---------- modal ----------
+  function buildCatChips() {
+    const row = $("catRow"); row.innerHTML = "";
+    CATEGORIES.forEach(c => {
+      const chip = document.createElement("div");
+      chip.className = "cat-chip" + (c.id === editing.cat ? " active" : "");
+      chip.dataset.cat = c.id;
+      chip.innerHTML = `${c.icon} ${c.label}`;
+      chip.addEventListener("click", () => {
+        editing.cat = c.id;
+        row.querySelectorAll(".cat-chip").forEach(x => x.classList.toggle("active", x.dataset.cat === c.id));
+      });
+      row.appendChild(chip);
+    });
+  }
+
+  function openModal(dk, eventId) {
+    editing.dayKey = dk; editing.eventId = eventId || null;
+    const isBacklog = dk === "backlog";
+    const ev = eventId ? (state.days[dk] || []).find(e => e.id === eventId) : null;
+    editing.cat = ev ? ev.cat : "sightseeing";
+    $("modalTitle").textContent = ev ? "Edit event" : (isBacklog ? "Add idea" : "Add event");
+    if (isBacklog) {
+      $("modalSub").textContent = "💡 Unplanned idea — drag it onto a day later";
+    } else {
+      const date = parseDate(dk);
+      $("modalSub").textContent = `${DOW[date.getDay()]}, ${MON[date.getMonth()]} ${date.getDate()}`;
+    }
+    $("evTime").value = ev ? (ev.time || "") : "";
+    setTimeDisplay(ev ? (ev.time || "") : "");
+    tpClose();
+    $("evText").value = ev ? ev.text : "";
+    $("evLink").value = ev ? (ev.link || "") : "";
+    // ideas have no time; every event may carry an optional link
+    $("timeField").classList.toggle("hidden", isBacklog);
+    buildCatChips();
+    $("overlay").classList.add("open");
+    setTimeout(() => $("evText").focus(), 50);
+  }
+  function closeModal() { $("overlay").classList.remove("open"); }
+
+  function saveModal(keepOpen) {
+    const text = $("evText").value.trim();
+    if (!text) { toast("Please enter what's planned"); $("evText").focus(); return; }
+    const dk = editing.dayKey;
+    const isBacklog = dk === "backlog";
+    const time = isBacklog ? "" : $("evTime").value;
+    const link = normalizeLink($("evLink").value.trim());
+    state.days[dk] = state.days[dk] || [];
+    if (editing.eventId) {
+      const ev = state.days[dk].find(e => e.id === editing.eventId);
+      if (ev) { ev.text = text; ev.time = time; ev.cat = editing.cat; ev.link = link; }
+    } else {
+      state.days[dk].push({ id: uid(), time, text, cat: editing.cat, done: false, link });
+    }
+    save(); render();
+    if (keepOpen) {
+      // keep modal open on the same day for rapid multi-entry
+      editing.eventId = null;
+      $("modalTitle").textContent = isBacklog ? "Add idea" : "Add event";
+      $("evText").value = "";
+      $("evLink").value = "";
+      $("evTime").value = "";
+      setTimeDisplay("");
+      tpClose();
+      toast("Added ✓ — add another");
+      setTimeout(() => $("evText").focus(), 30);
+    } else {
+      closeModal(); toast("Saved ✓");
+    }
+  }
+  function normalizeLink(url) {
+    if (!url) return "";
+    return /^https?:\/\//i.test(url) ? url : "https://" + url;
+  }
+
+  // ---------- build / actions ----------
+  function build() {
+    const start = $("startDate").value, end = $("endDate").value;
+    if (!start || !end) { toast("Pick both start and end dates"); return; }
+    if (parseDate(end) < parseDate(start)) { toast("End date must be after start date"); return; }
+    state.tripName = $("tripName").value.trim();
+    state.start = start; state.end = end;
+    // prune events outside range (keep the unplanned backlog)
+    const valid = new Set(eachDay(start, end).map(keyOf));
+    valid.add("backlog");
+    Object.keys(state.days).forEach(k => { if (!valid.has(k)) delete state.days[k]; });
+    save(); render();
+    toast("Calendar ready — start planning! 🎉");
+  }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (state.tripName || "trip").replace(/\s+/g,"_") + ".json";
+    a.click(); URL.revokeObjectURL(a.href);
+  }
+  function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data.start || !data.end) throw new Error("bad");
+        state = Object.assign({ tripName:"", start:"", end:"", days:{} }, data);
+        syncInputs(); save(); render(); toast("Trip imported ✓");
+      } catch { toast("Invalid trip file"); }
+    };
+    reader.readAsText(file);
+  }
+
+  function syncInputs() {
+    $("tripName").value = state.tripName || "";
+    $("startDate").value = state.start || "";
+    $("endDate").value = state.end || "";
+    $("startDateDisplay").value = state.start ? prettyDate(state.start) : "";
+    $("endDateDisplay").value = state.end ? prettyDate(state.end) : "";
+  }
+  function prettyDate(str) {
+    const d = parseDate(str);
+    return `${DOW[d.getDay()].slice(0,3)}, ${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+
+  // ---------- time picker ----------
+  const tp = { hour: null, min: null, ampm: null }; // hour 1-12, min 0-59, ampm AM/PM
+
+  function setTimeDisplay(val24) {
+    if (val24) {
+      $("timeDisplay").value = formatTime(val24);
+      const [h, m] = val24.split(":").map(Number);
+      tp.ampm = h >= 12 ? "PM" : "AM";
+      tp.hour = h % 12 === 0 ? 12 : h % 12;
+      tp.min = m;
+    } else {
+      $("timeDisplay").value = "";
+      tp.hour = tp.min = tp.ampm = null;
+    }
+  }
+
+  function tpCommit() {
+    if (tp.hour == null || tp.min == null || !tp.ampm) return; // need all parts
+    let h = tp.hour % 12;
+    if (tp.ampm === "PM") h += 12;
+    const val = `${String(h).padStart(2,"0")}:${String(tp.min).padStart(2,"0")}`;
+    $("evTime").value = val;
+    $("timeDisplay").value = formatTime(val);
+  }
+
+  function tpRender() {
+    const hours = $("tpHours"), mins = $("tpMins"), ampm = $("tpAmpm");
+    hours.innerHTML = ""; mins.innerHTML = ""; ampm.innerHTML = "";
+    for (let h = 1; h <= 12; h++) {
+      hours.appendChild(tpOpt(String(h), tp.hour === h, () => { tp.hour = h; if (!tp.ampm) tp.ampm = "AM"; if (tp.min == null) tp.min = 0; tpCommit(); tpRender(); }));
+    }
+    for (let m = 0; m < 60; m += 5) {
+      mins.appendChild(tpOpt(String(m).padStart(2,"0"), tp.min === m, () => { tp.min = m; if (!tp.ampm) tp.ampm = "AM"; if (tp.hour == null) tp.hour = 12; tpCommit(); tpRender(); }));
+    }
+    ["AM","PM"].forEach(a => {
+      ampm.appendChild(tpOpt(a, tp.ampm === a, () => { tp.ampm = a; if (tp.hour == null) tp.hour = 12; if (tp.min == null) tp.min = 0; tpCommit(); tpRender(); }));
+    });
+  }
+  function tpOpt(label, selected, onClick) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tp-opt" + (selected ? " sel" : "");
+    b.textContent = label;
+    b.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+    return b;
+  }
+  function tpOpen() {
+    tpRender();
+    $("timepicker").classList.add("open");
+    $("timeTrigger").classList.add("active");
+    // scroll selected options into view
+    ["tpHours","tpMins","tpAmpm"].forEach(id => {
+      const sel = $(id).querySelector(".sel");
+      if (sel) sel.scrollIntoView({ block: "center" });
+    });
+  }
+  function tpClose() {
+    $("timepicker").classList.remove("open");
+    $("timeTrigger").classList.remove("active");
+  }
+  function tpClear() {
+    setTimeDisplay("");
+    $("evTime").value = "";
+    tpRender();
+  }
+
+  function initTimePicker() {
+    $("timeTrigger").addEventListener("click", (e) => {
+      if (e.target.closest("#timeClear")) return;
+      $("timepicker").classList.contains("open") ? tpClose() : tpOpen();
+    });
+    $("timeClear").addEventListener("click", (e) => { e.stopPropagation(); tpClear(); });
+  }
+
+  // ---------- date range picker ----------
+  const dp = {
+    view: new Date(),     // month currently shown
+    start: null,          // "YYYY-MM-DD"
+    end: null,
+    pick: "start",        // which end we're choosing next
+  };
+
+  function dpOpen(which) {
+    dp.start = $("startDate").value || null;
+    dp.end = $("endDate").value || null;
+    dp.pick = (which === "end" && dp.start) ? "end" : "start";
+    dp.view = (which === "end" && dp.end) ? parseDate(dp.end)
+            : dp.start ? parseDate(dp.start) : new Date();
+    dpRender();
+    const dpEl = $("datepicker");
+    dpEl.classList.add("open");
+    $("startTrigger").classList.add("active");
+    $("endTrigger").classList.add("active");
+    // position under the trigger that was clicked
+    const anchor = which === "end" ? $("endTrigger") : $("startTrigger");
+    const r = anchor.getBoundingClientRect();
+    dpEl.style.top = (window.scrollY + r.bottom + 8) + "px";
+    dpEl.style.left = (window.scrollX + r.left) + "px";
+  }
+  function dpClose() {
+    $("datepicker").classList.remove("open");
+    $("startTrigger").classList.remove("active");
+    $("endTrigger").classList.remove("active");
+  }
+
+  function dpRender() {
+    $("dpMonth").textContent = `${["January","February","March","April","May","June","July","August","September","October","November","December"][dp.view.getMonth()]} ${dp.view.getFullYear()}`;
+    const grid = $("dpGrid"); grid.innerHTML = "";
+    const year = dp.view.getFullYear(), month = dp.view.getMonth();
+    const first = new Date(year, month, 1);
+    const startOffset = first.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayKey = keyOf(new Date());
+
+    // leading blanks from previous month
+    const prevDays = new Date(year, month, 0).getDate();
+    for (let i = startOffset - 1; i >= 0; i--) {
+      grid.appendChild(dpCell(new Date(year, month - 1, prevDays - i), true));
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      grid.appendChild(dpCell(new Date(year, month, d), false, todayKey));
+    }
+    // trailing blanks to fill 6 rows
+    const total = startOffset + daysInMonth;
+    const trailing = (7 - (total % 7)) % 7;
+    for (let d = 1; d <= trailing; d++) {
+      grid.appendChild(dpCell(new Date(year, month + 1, d), true));
+    }
+
+    const hint = $("dpHint");
+    if (!dp.start) hint.textContent = "Pick a start date";
+    else if (!dp.end) hint.textContent = "Pick an end date";
+    else {
+      const nights = eachDay(dp.start, dp.end).length - 1;
+      hint.textContent = `${nights + 1} days · ${nights} night${nights === 1 ? "" : "s"}`;
+    }
+  }
+
+  function dpCell(date, muted, todayKey) {
+    const btn = document.createElement("button");
+    btn.className = "dp-cell";
+    btn.textContent = date.getDate();
+    if (muted) { btn.classList.add("muted"); return btn; }
+    const k = keyOf(date);
+    if (k === todayKey) btn.classList.add("today");
+    if (dp.start && dp.end) {
+      if (k === dp.start && k === dp.end) btn.classList.add("single");
+      else if (k === dp.start) btn.classList.add("range-start");
+      else if (k === dp.end) btn.classList.add("range-end");
+      else if (k > dp.start && k < dp.end) btn.classList.add("in-range");
+    } else if (dp.start && k === dp.start) {
+      btn.classList.add("single");
+    }
+    btn.addEventListener("click", () => dpSelect(k));
+    return btn;
+  }
+
+  function dpSelect(k) {
+    if (dp.pick === "start" || (dp.start && k < dp.start)) {
+      dp.start = k; dp.end = null; dp.pick = "end";
+    } else {
+      dp.end = k; dp.pick = "start";
+    }
+    // commit to hidden inputs + display
+    $("startDate").value = dp.start || "";
+    $("endDate").value = dp.end || "";
+    $("startDateDisplay").value = dp.start ? prettyDate(dp.start) : "";
+    $("endDateDisplay").value = dp.end ? prettyDate(dp.end) : "";
+    dpRender();
+    if (dp.start && dp.end) setTimeout(dpClose, 250);
+  }
+
+  function dpClear() {
+    dp.start = null; dp.end = null; dp.pick = "start";
+    $("startDate").value = ""; $("endDate").value = "";
+    $("startDateDisplay").value = ""; $("endDateDisplay").value = "";
+    dpRender();
+  }
+
+  function initDatePicker() {
+    $("startTrigger").addEventListener("click", () => dpOpen("start"));
+    $("endTrigger").addEventListener("click", () => dpOpen("end"));
+    $("dpPrev").addEventListener("click", (e) => { e.stopPropagation(); dp.view = new Date(dp.view.getFullYear(), dp.view.getMonth() - 1, 1); dpRender(); });
+    $("dpNext").addEventListener("click", (e) => { e.stopPropagation(); dp.view = new Date(dp.view.getFullYear(), dp.view.getMonth() + 1, 1); dpRender(); });
+    $("dpClear").addEventListener("click", (e) => { e.stopPropagation(); dpClear(); });
+    document.addEventListener("click", (e) => {
+      if ($("datepicker").classList.contains("open") &&
+          !e.target.closest("#datepicker") &&
+          !e.target.closest("#startTrigger") &&
+          !e.target.closest("#endTrigger")) {
+        dpClose();
+      }
+    });
+  }
+
+  // ---------- world clocks ----------
+  const TZ_DATA = [
+    { zone:"America/New_York", city:"New York", country:"United States" },
+    { zone:"America/Chicago", city:"Chicago", country:"United States" },
+    { zone:"America/Denver", city:"Denver", country:"United States" },
+    { zone:"America/Phoenix", city:"Phoenix", country:"United States" },
+    { zone:"America/Los_Angeles", city:"Los Angeles", country:"United States" },
+    { zone:"America/Anchorage", city:"Anchorage", country:"United States" },
+    { zone:"Pacific/Honolulu", city:"Honolulu", country:"United States" },
+    { zone:"America/Toronto", city:"Toronto", country:"Canada" },
+    { zone:"America/Vancouver", city:"Vancouver", country:"Canada" },
+    { zone:"America/Mexico_City", city:"Mexico City", country:"Mexico" },
+    { zone:"America/Bogota", city:"Bogota", country:"Colombia" },
+    { zone:"America/Lima", city:"Lima", country:"Peru" },
+    { zone:"America/Santiago", city:"Santiago", country:"Chile" },
+    { zone:"America/Sao_Paulo", city:"Sao Paulo", country:"Brazil" },
+    { zone:"America/Argentina/Buenos_Aires", city:"Buenos Aires", country:"Argentina" },
+    { zone:"Atlantic/Reykjavik", city:"Reykjavik", country:"Iceland" },
+    { zone:"Europe/London", city:"London", country:"United Kingdom" },
+    { zone:"Europe/Dublin", city:"Dublin", country:"Ireland" },
+    { zone:"Europe/Lisbon", city:"Lisbon", country:"Portugal" },
+    { zone:"Europe/Madrid", city:"Madrid", country:"Spain" },
+    { zone:"Europe/Paris", city:"Paris", country:"France" },
+    { zone:"Europe/Brussels", city:"Brussels", country:"Belgium" },
+    { zone:"Europe/Amsterdam", city:"Amsterdam", country:"Netherlands" },
+    { zone:"Europe/Zurich", city:"Zurich", country:"Switzerland" },
+    { zone:"Europe/Berlin", city:"Berlin", country:"Germany" },
+    { zone:"Europe/Rome", city:"Rome", country:"Italy" },
+    { zone:"Europe/Vienna", city:"Vienna", country:"Austria" },
+    { zone:"Europe/Prague", city:"Prague", country:"Czechia" },
+    { zone:"Europe/Stockholm", city:"Stockholm", country:"Sweden" },
+    { zone:"Europe/Oslo", city:"Oslo", country:"Norway" },
+    { zone:"Europe/Copenhagen", city:"Copenhagen", country:"Denmark" },
+    { zone:"Europe/Warsaw", city:"Warsaw", country:"Poland" },
+    { zone:"Europe/Athens", city:"Athens", country:"Greece" },
+    { zone:"Europe/Helsinki", city:"Helsinki", country:"Finland" },
+    { zone:"Europe/Istanbul", city:"Istanbul", country:"Turkey" },
+    { zone:"Europe/Moscow", city:"Moscow", country:"Russia" },
+    { zone:"Africa/Casablanca", city:"Casablanca", country:"Morocco" },
+    { zone:"Africa/Lagos", city:"Lagos", country:"Nigeria" },
+    { zone:"Africa/Cairo", city:"Cairo", country:"Egypt" },
+    { zone:"Africa/Nairobi", city:"Nairobi", country:"Kenya" },
+    { zone:"Africa/Johannesburg", city:"Johannesburg", country:"South Africa" },
+    { zone:"Asia/Jerusalem", city:"Jerusalem", country:"Israel" },
+    { zone:"Asia/Riyadh", city:"Riyadh", country:"Saudi Arabia" },
+    { zone:"Asia/Dubai", city:"Dubai", country:"United Arab Emirates" },
+    { zone:"Asia/Tehran", city:"Tehran", country:"Iran" },
+    { zone:"Asia/Karachi", city:"Karachi", country:"Pakistan" },
+    { zone:"Asia/Kolkata", city:"Mumbai / Delhi", country:"India" },
+    { zone:"Asia/Kathmandu", city:"Kathmandu", country:"Nepal" },
+    { zone:"Asia/Dhaka", city:"Dhaka", country:"Bangladesh" },
+    { zone:"Asia/Bangkok", city:"Bangkok", country:"Thailand" },
+    { zone:"Asia/Jakarta", city:"Jakarta", country:"Indonesia" },
+    { zone:"Asia/Singapore", city:"Singapore", country:"Singapore" },
+    { zone:"Asia/Kuala_Lumpur", city:"Kuala Lumpur", country:"Malaysia" },
+    { zone:"Asia/Manila", city:"Manila", country:"Philippines" },
+    { zone:"Asia/Hong_Kong", city:"Hong Kong", country:"Hong Kong" },
+    { zone:"Asia/Shanghai", city:"Shanghai / Beijing", country:"China" },
+    { zone:"Asia/Taipei", city:"Taipei", country:"Taiwan" },
+    { zone:"Asia/Seoul", city:"Seoul", country:"South Korea" },
+    { zone:"Asia/Tokyo", city:"Tokyo", country:"Japan" },
+    { zone:"Australia/Perth", city:"Perth", country:"Australia" },
+    { zone:"Australia/Sydney", city:"Sydney", country:"Australia" },
+    { zone:"Pacific/Auckland", city:"Auckland", country:"New Zealand" },
+  ];
+
+  function tzShort(zone) {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "short" }).formatToParts(new Date());
+      const tn = parts.find(p => p.type === "timeZoneName");
+      return tn ? tn.value : "";
+    } catch { return ""; }
+  }
+  function tzInfo(zone) { return TZ_DATA.find(d => d.zone === zone) || { zone, city: zone.split("/").pop().replace(/_/g, " "), country: "Local" }; }
+  function comboLabel(zone) { const i = tzInfo(zone); return `${i.city}, ${i.country}`; }
+
+  function clockParts(zone) {
+    const now = new Date();
+    const t = now.toLocaleTimeString("en-US", { timeZone: zone, hour: "numeric", minute: "2-digit", hour12: true });
+    const m = t.match(/(.*)\s(AM|PM)$/i);
+    const time = m ? m[1] : t;
+    const ampm = m ? m[2] : "";
+    const date = now.toLocaleDateString("en-US", { timeZone: zone, weekday: "short", month: "short", day: "numeric" });
+    return { time, ampm, date };
+  }
+  function paintClock(timeId, dateId, zone) {
+    if (!zone) return;
+    const p = clockParts(zone), i = tzInfo(zone), sh = tzShort(zone);
+    $(timeId).innerHTML = `${p.time}<span class="ampm">${p.ampm}</span>`;
+    $(dateId).textContent = `${i.city} · ${p.date}${sh ? " · " + sh : ""}`;
+  }
+
+  let combo1, combo2;
+  function tickClocks() {
+    if (combo1) paintClock("time1", "date1", combo1.get());
+    if (combo2) paintClock("time2", "date2", combo2.get());
+  }
+  function localZone() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"; }
+    catch { return "America/New_York"; }
+  }
+
+  function makeCombo(idx, initialZone, onChange) {
+    const input = $(`tz${idx}Input`);
+    const list = $(`tz${idx}List`);
+    let selected = initialZone;
+    let active = -1;
+
+    function commit(zone) {
+      selected = zone;
+      input.value = comboLabel(zone);
+      onChange(zone);
+    }
+    function renderList(filter) {
+      const f = (filter || "").trim().toLowerCase();
+      const items = TZ_DATA.filter(d =>
+        !f || d.city.toLowerCase().includes(f) || d.country.toLowerCase().includes(f) || d.zone.toLowerCase().includes(f));
+      list.innerHTML = "";
+      active = -1;
+      if (!items.length) { list.innerHTML = `<div class="tz-empty">No matches</div>`; return; }
+      items.forEach(d => {
+        const el = document.createElement("div");
+        el.className = "tz-item" + (d.zone === selected ? " sel" : "");
+        el.dataset.zone = d.zone;
+        el.innerHTML = `<span>${d.city}</span><span class="tz-c">${d.country} · ${tzShort(d.zone)}</span>`;
+        el.addEventListener("mousedown", (e) => { e.preventDefault(); commit(d.zone); close(); });
+        list.appendChild(el);
+      });
+    }
+    function open() { renderList(""); list.classList.add("open"); }
+    function close() { list.classList.remove("open"); input.value = comboLabel(selected); }
+    function move(dir) {
+      const opts = [...list.querySelectorAll(".tz-item")];
+      if (!opts.length) return;
+      active = (active + dir + opts.length) % opts.length;
+      opts.forEach((o, i) => o.classList.toggle("active", i === active));
+      opts[active].scrollIntoView({ block: "nearest" });
+    }
+
+    input.addEventListener("focus", () => { input.value = ""; open(); });
+    input.addEventListener("input", () => { renderList(input.value); list.classList.add("open"); });
+    input.addEventListener("blur", () => setTimeout(close, 150));
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (!list.classList.contains("open")) open(); else move(1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        const opts = [...list.querySelectorAll(".tz-item")];
+        const pick = active >= 0 ? opts[active] : opts[0];
+        if (pick) { commit(pick.dataset.zone); close(); input.blur(); }
+      } else if (e.key === "Escape") { close(); input.blur(); }
+    });
+
+    input.value = comboLabel(selected);
+    return { get: () => selected, set: commit };
+  }
+
+  function initClocks() {
+    const local = localZone();
+    if (!TZ_DATA.some(d => d.zone === local)) {
+      TZ_DATA.unshift({ zone: local, city: local.split("/").pop().replace(/_/g, " "), country: "Your location" });
+    }
+    const ensure = (z, fb) => (TZ_DATA.some(d => d.zone === z) ? z : fb);
+    const z1 = ensure(localStorage.getItem("wl_tz1") || "America/New_York", "America/New_York");
+    const z2 = ensure(localStorage.getItem("wl_tz2") || local, local);
+    combo1 = makeCombo(1, z1, (z) => { localStorage.setItem("wl_tz1", z); tickClocks(); });
+    combo2 = makeCombo(2, z2, (z) => { localStorage.setItem("wl_tz2", z); tickClocks(); });
+    $("tzAuto").addEventListener("click", () => { combo2.set(local); toast("Using your local time zone"); });
+    tickClocks();
+    setInterval(tickClocks, 1000);
+  }
+
+  // ---------- wire up ----------
+  function init() {
+    load(); syncInputs(); render();
+    initClocks();
+    initDatePicker();
+    initTimePicker();
+
+    $("buildBtn").addEventListener("click", build);
+    $("saveBtn").addEventListener("click", () => saveModal(false));
+    $("saveAddBtn").addEventListener("click", () => saveModal(true));
+    $("cancelBtn").addEventListener("click", closeModal);
+    $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeModal(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { closeModal(); dpClose(); }
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && $("overlay").classList.contains("open")) saveModal(e.shiftKey);
+    });
+
+    $("calendar").addEventListener("click", (e) => {
+      const add = e.target.closest(".add-btn");
+      if (add) openModal(add.dataset.key, null);
+    });
+
+    // backlog add + drag/drop target
+    $("backlogAdd").addEventListener("click", () => openModal("backlog", null));
+    const bl = $("backlogSection");
+    bl.addEventListener("dragover", (e) => { e.preventDefault(); bl.classList.add("dragover"); });
+    bl.addEventListener("dragleave", () => bl.classList.remove("dragover"));
+    bl.addEventListener("drop", (e) => {
+      e.preventDefault(); bl.classList.remove("dragover");
+      const data = e.dataTransfer.getData("text/plain");
+      if (data) moveEvent(data, "backlog");
+    });
+
+    $("searchBox").addEventListener("input", render);
+    $("exportBtn").addEventListener("click", exportJSON);
+    $("importBtn").addEventListener("click", () => $("importFile").click());
+    $("importFile").addEventListener("change", (e) => { if (e.target.files[0]) importJSON(e.target.files[0]); e.target.value=""; });
+    $("printBtn").addEventListener("click", () => window.print());
+    $("clearBtn").addEventListener("click", () => {
+      if (confirm("Clear the entire trip and all events?")) {
+        state = { tripName:"", start:"", end:"", days:{} };
+        syncInputs(); save(); render(); toast("Cleared");
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
