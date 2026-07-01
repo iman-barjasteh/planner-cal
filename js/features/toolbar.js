@@ -9,6 +9,11 @@ import {
   replaceAll,
   EXPORT_VERSION,
 } from "../core/store.js";
+import {
+  cloudEnabled,
+  shareUrl,
+  getTripIdFromHash,
+} from "../core/backends/index.js";
 
 function render() {
   const state = getState();
@@ -43,8 +48,24 @@ function importJSON(file) {
   reader.readAsText(file);
 }
 
+async function shareTrip() {
+  if (!cloudEnabled()) {
+    toast("Add your Firebase config to enable sharing");
+    return;
+  }
+  const url = shareUrl(getTripIdFromHash());
+  try {
+    await navigator.clipboard.writeText(url);
+    toast("Share link copied ✓");
+  } catch {
+    // Clipboard blocked (e.g. non-secure context) — surface the link instead.
+    window.prompt("Copy this share link:", url);
+  }
+}
+
 export function init() {
   $("#searchBox").addEventListener("input", (e) => setFilter(e.target.value));
+  $("#shareBtn").addEventListener("click", shareTrip);
   $("#exportBtn").addEventListener("click", exportJSON);
   $("#importBtn").addEventListener("click", () => $("#importFile").click());
   $("#importFile").addEventListener("change", (e) => {

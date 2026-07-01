@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// Capability-URL model: a trip is accessible to anyone who knows its (long,
+// random) id. There is no per-user auth in v1 — the unguessable id in the share
+// link is the access control. To require named users later, add Firebase Auth
+// and gate these rules on request.auth.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reject short/guessable trip ids so nobody can brute-force their way in.
+    function longId(id) {
+      return id is string && id.size() >= 10 && id.size() <= 64;
+    }
+
+    function validMeta(data) {
+      return data.keys().hasOnly(['name', 'start', 'end', 'version'])
+        && data.name is string && data.name.size() <= 120
+        && data.start is string && data.start.size() <= 10
+        && data.end is string && data.end.size() <= 10;
+    }
+
+    function validEvent(data) {
+      return data.keys().hasOnly(['dayKey', 'time', 'text', 'cat', 'done', 'link'])
+        && data.dayKey is string && data.dayKey.size() <= 16
+        && data.time is string && data.time.size() <= 5
+        && data.text is string && data.text.size() <= 2000
+        && data.cat is string && data.cat.size() <= 32
+        && data.done is bool
+        && data.link is string && data.link.size() <= 2000;
+    }
+
+    match /trips/{tripId} {
+      allow read: if longId(tripId);
+      allow delete: if longId(tripId);
+      allow create, update: if longId(tripId) && validMeta(request.resource.data);
+
+      match /events/{eventId} {
+        allow read: if longId(tripId);
+        allow delete: if longId(tripId);
+        allow create, update: if longId(tripId) && validEvent(request.resource.data);
+      }
+    }
+  }
+}
