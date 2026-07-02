@@ -477,6 +477,32 @@
   .cat-chip.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,139,255,.3); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 
+  /* ---------- AI Smart Add ---------- */
+  .modal.wide { width: min(620px, 94vw); max-height: 88vh; overflow-y: auto; }
+  .ai-key-row { display: flex; gap: 8px; }
+  .ai-key-row input { flex: 1; }
+  .ai-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .ai-key-saved {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(67,212,154,.1); border: 1px solid rgba(67,212,154,.3);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px;
+  }
+  .ai-results-head { font-weight: 600; margin-bottom: 10px; }
+  .ai-item {
+    background: var(--bg); border: 1px solid rgba(40,75,140,.12);
+    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .ai-item-grid {
+    display: grid; grid-template-columns: 1.4fr 1fr 1.2fr auto; gap: 8px; align-items: center;
+  }
+  .ai-item select, .ai-item input {
+    background: var(--card); border: 1px solid rgba(40,75,140,.12);
+    color: var(--text); padding: 8px 10px; border-radius: 8px;
+    font-size: 13px; font-family: inherit; width: 100%;
+  }
+  .ai-item .ai-remove { flex: none; }
+
   /* ---------- Toast ---------- */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120%);

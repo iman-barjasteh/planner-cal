@@ -11,6 +11,7 @@ import * as backlog from "./features/backlog.js";
 import * as stats from "./features/stats.js";
 import * as toolbar from "./features/toolbar.js";
 import * as clocks from "./features/clocks.js";
+import * as importText from "./features/importText.js";
 
 async function init() {
   const { backend, mode } = selectBackend();
@@ -20,6 +21,7 @@ async function init() {
   datePicker.init();
   timePicker.init();
   eventModal.init();
+  importText.init();
 
   // Store-driven feature views (each subscribes to the store).
   tripPanel.init();

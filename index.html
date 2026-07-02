@@ -100,6 +100,7 @@
       <input type="text" class="search" id="searchBox" placeholder="🔍 Search events…" />
       <span class="spacer"></span>
       <button class="btn ghost" id="shareBtn">🔗 Share</button>
+      <button class="btn ghost" id="aiImportBtn">✨ Smart Add</button>
       <button class="btn ghost" id="exportBtn">⬇ Export JSON</button>
       <button class="btn ghost" id="importBtn">⬆ Import</button>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
@@ -171,6 +172,50 @@
         <button class="btn secondary" id="cancelBtn">Cancel</button>
         <button class="btn ghost" id="saveAddBtn">Save &amp; add another</button>
         <button class="btn" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Smart Add modal -->
+  <div class="overlay" id="aiOverlay">
+    <div class="modal wide">
+      <h3>✨ Smart Add from text</h3>
+      <div class="sub">Paste a flight confirmation, hotel booking, or plain description — Gemini will find the events.</div>
+
+      <div class="field" id="aiKeyField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Gemini API key</label>
+        <div class="ai-key-row">
+          <input type="password" id="aiKeyInput" placeholder="Paste your Gemini API key" autocomplete="off" />
+          <button class="btn ghost" id="aiKeySaveBtn">Save</button>
+        </div>
+        <div class="ai-hint">
+          Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+          Stored only in this browser, sent only to Google.
+        </div>
+      </div>
+
+      <div class="ai-key-saved hidden" id="aiKeySaved">
+        <span>🔑 Gemini key saved</span>
+        <button class="btn ghost" id="aiKeyChangeBtn">Change key</button>
+      </div>
+
+      <div class="field" id="aiTextField">
+        <label class="lbl" style="font-size:12px;color:var(--muted)">Paste text</label>
+        <textarea id="aiText" rows="7" placeholder="Paste your flight confirmation, hotel email, or trip notes here…"></textarea>
+      </div>
+
+      <div class="modal-actions" id="aiExtractActions">
+        <button class="btn secondary" id="aiCancelBtn">Cancel</button>
+        <button class="btn" id="aiExtractBtn">✨ Extract events</button>
+      </div>
+
+      <div class="ai-results hidden" id="aiResults">
+        <div class="ai-results-head" id="aiResultsHead">Review extracted events</div>
+        <div id="aiResultsList"></div>
+        <div class="modal-actions">
+          <button class="btn secondary" id="aiBackBtn">Back</button>
+          <button class="btn" id="aiAddAllBtn">Add events</button>
+        </div>
       </div>
     </div>
   </div>

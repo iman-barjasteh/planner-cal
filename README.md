@@ -14,6 +14,9 @@ reused in a native/iOS app.
 - Auto-saves to the browser (localStorage). Export / Import JSON, and Print.
 - **Optional cloud sync**: share a link and edit the same trip live with others
   (Firestore-backed). Off by default — the app is fully usable offline.
+- **Optional AI Smart Add**: paste a flight confirmation, hotel booking, or
+  free-form text and let Gemini extract structured events for you to review
+  before adding. Off by default — requires your own free Gemini API key.
 
 ## Running it
 
@@ -48,8 +51,11 @@ myCal/
 │   ├── core/               # portable, DOM-free layer
 │   │   ├── storage.js      # localStorage adapter
 │   │   ├── firebaseConfig.js # paste your Firebase web config here (blank = offline)
+│   │   ├── aiConfig.js     # Gemini API key storage (localStorage, bring-your-own-key)
 │   │   ├── models.js       # categories + event factory/helpers
 │   │   ├── store.js        # state, pub/sub, actions (+ v1→v2 migration)
+│   │   ├── extract/
+│   │   │   └── geminiExtractor.js # calls Gemini to parse pasted text into events
 │   │   └── backends/       # pluggable persistence
 │   │       ├── index.js        # selects local vs cloud; trip-id / share-link helpers
 │   │       ├── localBackend.js # localStorage whole-state (offline default)
@@ -62,10 +68,11 @@ myCal/
 │       ├── timePicker.js   # hour/min/AM–PM popup widget
 │       ├── datePicker.js   # range date-picker popup widget
 │       ├── eventModal.js   # add/edit event modal
+│       ├── importText.js   # "Smart Add" — paste text, AI-extract, review, commit
 │       ├── calendar.js     # day cards + drag/drop
 │       ├── backlog.js      # "things to do" backlog
 │       ├── stats.js        # stats bar
-│       ├── toolbar.js      # search / share / export / import / print / clear
+│       ├── toolbar.js      # search / share / smart add / export / import / print / clear
 │       ├── tripPanel.js    # trip name + build button
 │       └── clocks.js       # dual searchable world clocks
 ├── firestore.rules         # security rules for cloud mode
@@ -112,4 +119,26 @@ who opens it edits the same trip, with changes syncing live.
   you add Firebase Auth.
 - To move an existing offline trip into the cloud, **Export JSON** locally, open a
   fresh cloud trip, and **Import** it.
+
+## AI Smart Add (optional)
+
+Click **✨ Smart Add** to paste a flight confirmation, hotel booking, or plain
+trip notes and have Gemini pull out structured events for you to review before
+they're added.
+
+1. **Get a free API key** at <https://aistudio.google.com/apikey>.
+2. **Paste it into the Smart Add dialog** the first time you use it — it's saved
+   only in this browser's `localStorage` (`js/core/aiConfig.js`), never sent
+   anywhere except directly to Google's Gemini API.
+3. Paste your text and click **Extract events**. Each detected event (a flight
+   confirmation typically yields both a departure and landing; a hotel booking
+   yields check-in and check-out) appears as an **editable row** — fix the day,
+   time, category, or text, remove any you don't want, then **Add events**.
+4. If Gemini can't confidently determine a date (or it falls outside your trip's
+   range), the event defaults to **Things to do** so nothing is lost.
+
+This feature is entirely optional and off by default — without a key, the rest
+of the app (including manual event entry) works exactly as before. Pasted text
+is sent to Google's API only when you click Extract; nothing is stored or sent
+anywhere else.
 
