@@ -6,7 +6,7 @@
 import { getApiKey } from "../aiConfig.js";
 import { CATEGORIES } from "../models.js";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-flash-latest";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const RESPONSE_SCHEMA = {
