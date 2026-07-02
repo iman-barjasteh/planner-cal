@@ -9,12 +9,13 @@
 // app, by the unguessable trip id in the share link.
 
 export const FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyAw01nUQqnjRFMHToj8HkcgoPDvvnFAoiQ",
+  authDomain: "planner-cal-9e7ee.firebaseapp.com",
+  projectId: "planner-cal-9e7ee",
+  storageBucket: "planner-cal-9e7ee.firebasestorage.app",
+  messagingSenderId: "431235440064",
+  appId: "1:431235440064:web:57a1074a2a1c11d0323c25",
+  measurementId: "G-C145PTKG69",
 };
 
 // Version of the Firebase modular SDK to load from the CDN (cloud mode only).
